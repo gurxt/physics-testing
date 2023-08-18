@@ -27,6 +27,7 @@ export default function Scene() {
           shadow-camera-bottom={-10}
         />
         <ambientLight intensity={0.25}/>
+        <OrbitControls />
       </Physics>
     </Suspense>
     </>

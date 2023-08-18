@@ -73,7 +73,7 @@ export default function ThirdPersonController() {
   }, [])
 
   useFrame(({ camera }, delta) => {
-    if (!body.current) return null
+    if (!body.current) return null;
 
     const { forward, backward, left, right, sprint, crouch } = getKeys()
 
@@ -83,9 +83,9 @@ export default function ThirdPersonController() {
     const direction = new Vector3()
     direction.set(
       Number(right) - Number(left),
-      bodyPosition.y,
+      0,
       Number(backward) - Number(forward)
-    ).normalize()
+    ).normalize();
 
     const _animation = setAnimationHelper(direction.x, direction.z, animation.current)
     if (_animation)
@@ -94,46 +94,48 @@ export default function ThirdPersonController() {
         current: _animation
       }))
 
-    let bodyRotation = new Quaternion()
-    bodyRotation.setFromAxisAngle(new Vector3(0, 1, 0), yaw.current)
-    direction.applyQuaternion(bodyRotation)
+    let bodyRotation = new Quaternion();
+    bodyRotation.setFromAxisAngle(new Vector3(0, 1, 0), yaw.current);
+    direction.applyQuaternion(bodyRotation);
 
-    let speed
-    if      (crouch) speed = setSpeed(direction.x, direction.z, 1)
-    else if (sprint) speed = setSpeed(direction.x, direction.z, 4) 
-    else             speed = setSpeed(direction.x, direction.z, 2)
+    let speed;
+    if      (crouch) speed = setSpeed(direction.x, direction.z, 1);
+    else if (sprint) speed = setSpeed(direction.x, direction.z, 4);
+    else             speed = setSpeed(direction.x, direction.z, 2);
 
-    const deltaPosition = direction.multiplyScalar(speed * delta)
-    const finalPosition = new Vector3(
-      bodyPosition.x,
-      bodyPosition.y,
-      bodyPosition.z
-    ).add(deltaPosition)
+    // Setting the character's velocity directly
+    const currentVelocity = body.current.linvel();  // Get the current linear velocity
 
-    body.current.setTranslation(finalPosition)
-    body.current.setRotation(bodyRotation)
+    const horizontalSpeed = direction.multiplyScalar(speed);  // Calculate horizontal speed based on player input
 
+    // Combine the y component of the current velocity (to respect gravity) 
+    // with the calculated horizontal speed
+    const newVelocity = new Vector3(horizontalSpeed.x, currentVelocity.y, horizontalSpeed.z);
 
-    /* Camera Logic with bodyPosition */
-    const heightOffset = (zoom.current - 1) / 2; 
-    const cameraOffset = new Vector3(0, 1 + Math.sin(pitch.current) + heightOffset, zoom.current)
+    body.current.setLinvel(newVelocity);  // Set the new velocity
 
-    // Apply the body's rotation to the offset
-    cameraOffset.applyQuaternion(bodyRotation)
+    body.current.setRotation(bodyRotation);
 
-    // Add the offset to the body position
-    const newCameraPosition = new Vector3().addVectors(bodyPosition, cameraOffset)
+    // /* Camera Logic with bodyPosition */
+    // const heightOffset = (zoom.current - 1) / 2; 
+    // const cameraOffset = new Vector3(0, 1 + Math.sin(pitch.current) + heightOffset, zoom.current);
+
+    // // Apply the body's rotation to the offset
+    // cameraOffset.applyQuaternion(bodyRotation);
+
+    // // Add the offset to the body position
+    // const newCameraPosition = new Vector3().addVectors(bodyPosition, cameraOffset);
     
-    // Set the target camera position
-    setTargetCameraPosition(newCameraPosition)
+    // // Set the target camera position
+    // setTargetCameraPosition(newCameraPosition);
 
-    //Interpolate the camera position towards the target position
-    camera.position.lerp(targetCameraPosition, lerpFactor)
+    // // Interpolate the camera position towards the target position
+    // camera.position.lerp(targetCameraPosition, lerpFactor);
 
-    // Adjust the lookAt position to look down on the body
-    const lookAtPosition = new Vector3(bodyPosition.x, bodyPosition.y + 2 - Math.sin(pitch.current), bodyPosition.z)
-    camera.lookAt(lookAtPosition)
-}, 1);
+    // // Adjust the lookAt position to look down on the body
+    // const lookAtPosition = new Vector3(bodyPosition.x, bodyPosition.y + 2 - Math.sin(pitch.current), bodyPosition.z);
+    // camera.lookAt(lookAtPosition);
+  })
 
 
   return (
@@ -141,14 +143,12 @@ export default function ThirdPersonController() {
     <RigidBody
       type="dynamic"
       ref={body}
-      colliders={false}
-      angularDamping={0.5}
-      linearDamping={0.5}
+      friction={0}
       canSleep={false}
       gravity={[0, -9.81, 0]}
       position={[0, 10, 0]}
     >
-      <CapsuleCollider friction={0.5} position={[0, 0.85, 0]} args={[0.6, 0.3, 1]} />
+      {/* <CapsuleCollider position={[0, 0.85, 0]} args={[0.6, 0.3, 1]} /> */}
       <PlayerCharacter animation={animation} />
     </RigidBody>
     </>

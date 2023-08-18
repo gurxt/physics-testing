@@ -50,7 +50,7 @@ export default function Ground({ position }) {
 
   if (!hf && !indices) return <></>
   return (
-    <RigidBody type="fixed">
+    <RigidBody friction={1} type="fixed">
       <mesh rotation={[Math.PI / 2, 0, 0]} ref={ref}>
         <planeGeometry args={[250, 250, 256, 256]} />
         <customShaderMaterial castShadow receiveShadow attach="material" uniforms-uTextureCobblestone-value={textureCobblestone} uniforms-uTextureGrass-value={textureGrass} /> 
